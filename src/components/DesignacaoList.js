@@ -48,7 +48,7 @@ const DesignacaoList = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Text type={status === 'Ativo' ? 'success' : 'danger'}>
+        <Text type={status === 'INSTALADO' ? 'success' : 'danger'}>
           {status}
         </Text>
       ),
@@ -64,13 +64,25 @@ const DesignacaoList = () => {
         expandedRowRender: (record) => (
           <Collapse>
             <Panel header="Dados Cadastrais" key="1">
+              <p><strong>ID:</strong> {record.id}</p>
+              <p><strong>Designação:</strong> {record.designacao}</p>
+              <p><strong>Status:</strong> {record.status}</p>
               <p><strong>Cidade:</strong> {record.nomeCidade}</p>
-              {/* Adicione mais campos conforme necessário */}
             </Panel>
             <Panel header="Dados Técnicos" key="2">
+              <p><strong>CVLAN:</strong> {record.cvlan}</p>
+              <p><strong>SVLAN:</strong> {record.svlan}</p>
               <p><strong>IP WAN:</strong> {record.ipWan}</p>
-              <p><strong>IP:</strong> {record.circuitIp}</p>
-              {/* Adicione mais campos conforme necessário */}
+            </Panel>
+            <Panel header="Datas" key="3">
+              <p><strong>Data de Criação:</strong> {record.dataCriacao}</p>
+              <p><strong>Última Modificação:</strong> {record.dataUltimaModificacao}</p>
+              <p><strong>Data de envio da RB:</strong> {record.dataEnvioRb}</p>
+              <p><strong>Agendamento:</strong> {record.dataAgendamento}</p>
+              <p><strong>Agendado:</strong> {record.dataAgendado}</p>
+              <p><strong>Instalação:</strong> {record.dataInstalacao}</p>
+              <p><strong>Homologação:</strong> {record.dataHomologacao}</p>
+              <p><strong>Entrega Oi:</strong> {record.dataEntregaOi}</p>
             </Panel>
           </Collapse>
         ),
