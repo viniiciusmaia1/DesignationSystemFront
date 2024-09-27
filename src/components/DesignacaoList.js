@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './DesignacaoList.css';
+import { Table, Button, Collapse, Typography } from 'antd';
+import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
+
+const { Panel } = Collapse;
+const { Text } = Typography;
 
 const DesignacaoList = () => {
   const [designacoes, setDesignacoes] = useState([]);
-  const [expandedId, setExpandedId] = useState(null);
+  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
 
   useEffect(() => {
     const fetchDesignacoes = async () => {
@@ -19,62 +23,67 @@ const DesignacaoList = () => {
     fetchDesignacoes();
   }, []);
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
+  const handleExpand = (expanded, record) => {
+    setExpandedRowKeys(expanded ? [record.id] : []);
   };
 
+  const columns = [
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+    },
+    {
+      title: 'Designação',
+      dataIndex: 'designacao',
+      key: 'designacao',
+    },
+    {
+      title: 'Cidade',
+      dataIndex: 'nomeCidade',
+      key: 'cidade',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => (
+        <Text type={status === 'Ativo' ? 'success' : 'danger'}>
+          {status}
+        </Text>
+      ),
+    },
+  ];
+
   return (
-    <div className="designacao-list">
-      <h1>Lista de Designações</h1>
-      <table className="designacao-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Designação</th>
-            <th>Cidade</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {designacoes.map(designacao => (
-            <React.Fragment key={designacao.id}>
-              <tr onClick={() => toggleExpand(designacao.id)}>
-                <td>
-                  <button className="expand-button">
-                    {expandedId === designacao.id ? '-' : '+'}
-                  </button> {designacao.id}
-                </td>
-                <td>{designacao.designacao}</td>
-                <td>{designacao.nomeCidade}</td>
-                <td className={designacao.status === 'Ativo' ? 'status-active' : 'status-inactive'}>
-                  {designacao.status}
-                </td>
-              </tr>
-              {expandedId === designacao.id && (
-                <tr className="expanded-row">
-                  <td colSpan="4">
-                    <div className="details">
-                      <div className="column">
-                      <p><strong>DESIGNACAO:</strong> {designacao.designacao}</p>
-                      <p><strong>CIDADE:</strong> {designacao.nomeCidade}</p>
-                        <p><strong>IP WAN:</strong> {designacao.ipWan}</p>
-                        <p><strong>IP:</strong> {designacao.circuitIp}</p>
-                        
-                      </div>
-                      <div className="column">
-                      
-                        <p><strong>CVLAN:</strong> {designacao.cvlan}</p>
-                        <p><strong>SVLAN:</strong> {designacao.svlan}</p>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table
+      columns={columns}
+      dataSource={designacoes}
+      rowKey="id"
+      expandable={{
+        expandedRowRender: (record) => (
+          <Collapse>
+            <Panel header="Dados Cadastrais" key="1">
+              <p><strong>Cidade:</strong> {record.nomeCidade}</p>
+              {/* Adicione mais campos conforme necessário */}
+            </Panel>
+            <Panel header="Dados Técnicos" key="2">
+              <p><strong>IP WAN:</strong> {record.ipWan}</p>
+              <p><strong>IP:</strong> {record.circuitIp}</p>
+              {/* Adicione mais campos conforme necessário */}
+            </Panel>
+          </Collapse>
+        ),
+        onExpand: handleExpand,
+        expandedRowKeys,
+        expandIcon: ({ expanded, onExpand, record }) =>
+          <Button
+            icon={expanded ? <MinusOutlined /> : <PlusOutlined />}
+            shape="circle"
+            onClick={(e) => onExpand(record, e)}
+          />
+      }}
+    />
   );
 };
 
