@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Button, Collapse, Typography } from 'antd';
-import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import { Table, Button, Collapse, Typography, Select, message } from 'antd';
+import { PlusOutlined, MinusOutlined, EditOutlined, SaveOutlined } from '@ant-design/icons';
 
 const { Panel } = Collapse;
 const { Text } = Typography;
+const { Option } = Select;
 
 const DesignacaoList = () => {
   const [designacoes, setDesignacoes] = useState([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+  const [editModeCadastrais, setEditModeCadastrais] = useState(false);
+  const [editableData, setEditableData] = useState({});
 
   useEffect(() => {
     const fetchDesignacoes = async () => {
@@ -25,6 +28,29 @@ const DesignacaoList = () => {
 
   const handleExpand = (expanded, record) => {
     setExpandedRowKeys(expanded ? [record.id] : []);
+    setEditableData(record);
+    setEditModeCadastrais(false);
+  };
+
+  const handleStatusChange = (value) => {
+    setEditableData({ ...editableData, status: value });
+  };
+
+  const handleSaveCadastrais = async () => {
+    try {
+      await axios.put(`http://localhost:8080/api/designacoes/${editableData.id}/status`, {
+        status: editableData.status,
+      });
+      message.success('Status atualizado com sucesso');
+      const updatedDesignacoes = designacoes.map((d) =>
+        d.id === editableData.id ? { ...d, status: editableData.status } : d
+      );
+      setDesignacoes(updatedDesignacoes);
+      setEditModeCadastrais(false);
+    } catch (err) {
+      console.error('Erro ao atualizar status:', err);
+      message.error('Erro ao atualizar status');
+    }
   };
 
   const columns = [
@@ -64,9 +90,33 @@ const DesignacaoList = () => {
         expandedRowRender: (record) => (
           <Collapse>
             <Panel header="Dados Cadastrais" key="1">
-              <p><strong>ID:</strong> {record.id}</p>
-              <p><strong>Designação:</strong> {record.designacao}</p>
-              <p><strong>Status:</strong> {record.status}</p>
+              {editModeCadastrais ? (
+                <>
+                  <p><strong>ID:</strong> {record.id}</p>
+                  <p><strong>Designação:</strong> {record.designacao}</p>
+                  <Select defaultValue={record.status} onChange={handleStatusChange} style={{ width: 180 }}>
+                    <Option value="AGENDADO">AGENDADO</Option>
+                    <Option value="AGENDAMENTO">AGENDAMENTO</Option>
+                    <Option value="CANCELADO">CANCELADO</Option>
+                    <Option value="ENTREGUE_PORTAL_OI">ENTREGUE PORTAL OI</Option>
+                    <Option value="ENVIO_RB">ENVIO RB</Option>
+                    <Option value="HOMOLOGADO">HOMOLOGADO</Option>
+                    <Option value="INSTALADO">INSTALADO</Option>
+                    <Option value="NEGOCIAÇÃO">NEGOCIAÇÃO</Option>
+                    <Option value="PENDENCIA_OI">PENDENCIA OI</Option>
+                    <Option value="REAGENDADO">REAGENDADO</Option>
+                    <Option value="VIABILIDADE">VIABILIDADE</Option>
+                  </Select>
+                  <Button onClick={handleSaveCadastrais} icon={<SaveOutlined />}>Salvar</Button>
+                </>
+              ) : (
+                <>
+                  <p><strong>ID:</strong> {record.id}</p>
+                  <p><strong>Designação:</strong> {record.designacao}</p>
+                  <p><strong>Status:</strong> {record.status}</p>
+                  <Button onClick={() => setEditModeCadastrais(true)} icon={<EditOutlined />}>Editar</Button>
+                </>
+              )}
               <p><strong>Cidade:</strong> {record.nomeCidade}</p>
             </Panel>
             <Panel header="Dados Técnicos" key="2">
