@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './DesignacaoList.css';
 
 const DesignacaoList = () => {
   const [designacoes, setDesignacoes] = useState([]);
@@ -23,7 +24,7 @@ const DesignacaoList = () => {
   };
 
   return (
-    <div>
+    <div className="designacao-list">
       <h1>Lista de Designações</h1>
       <table className="designacao-table">
         <thead>
@@ -32,30 +33,39 @@ const DesignacaoList = () => {
             <th>Designação</th>
             <th>Cidade</th>
             <th>Status</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
           {designacoes.map(designacao => (
             <React.Fragment key={designacao.id}>
-              <tr>
-                <td>{designacao.id}</td>
+              <tr onClick={() => toggleExpand(designacao.id)}>
+                <td>
+                  <button className="expand-button">
+                    {expandedId === designacao.id ? '-' : '+'}
+                  </button> {designacao.id}
+                </td>
                 <td>{designacao.designacao}</td>
                 <td>{designacao.nomeCidade}</td>
-                <td>{designacao.status}</td>
-                <td>
-                  <button onClick={() => toggleExpand(designacao.id)}>
-                    {expandedId === designacao.id ? '-' : '+'}
-                  </button>
+                <td className={designacao.status === 'Ativo' ? 'status-active' : 'status-inactive'}>
+                  {designacao.status}
                 </td>
               </tr>
               {expandedId === designacao.id && (
                 <tr className="expanded-row">
-                  <td colSpan="5">
+                  <td colSpan="4">
                     <div className="details">
-                      <p><strong>IP WAN:</strong> {designacao.ipWan || 'N/A'}</p>
-                      <p><strong>IP:</strong> {designacao.circuitIp || 'N/A'}</p>
-                  
+                      <div className="column">
+                      <p><strong>DESIGNACAO:</strong> {designacao.designacao}</p>
+                      <p><strong>CIDADE:</strong> {designacao.nomeCidade}</p>
+                        <p><strong>IP WAN:</strong> {designacao.ipWan}</p>
+                        <p><strong>IP:</strong> {designacao.circuitIp}</p>
+                        
+                      </div>
+                      <div className="column">
+                      
+                        <p><strong>CVLAN:</strong> {designacao.cvlan}</p>
+                        <p><strong>SVLAN:</strong> {designacao.svlan}</p>
+                      </div>
                     </div>
                   </td>
                 </tr>
