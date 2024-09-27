@@ -70,6 +70,7 @@ const DesignacaoList = () => {
               <p><strong>Cidade:</strong> {record.nomeCidade}</p>
             </Panel>
             <Panel header="Dados Técnicos" key="2">
+              <p><strong>IP PUBLICO:</strong> {record.circuitIp}</p>
               <p><strong>CVLAN:</strong> {record.cvlan}</p>
               <p><strong>SVLAN:</strong> {record.svlan}</p>
               <p><strong>IP WAN:</strong> {record.ipWan}</p>
