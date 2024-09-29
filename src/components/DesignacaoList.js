@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Button, Collapse, Typography, Select, message } from 'antd';
+import { Table, Button, Collapse, Typography, Select, message, Modal, Input } from 'antd';
 import { PlusOutlined, MinusOutlined, EditOutlined, SaveOutlined } from '@ant-design/icons';
 
 const { Panel } = Collapse;
@@ -12,6 +12,7 @@ const DesignacaoList = () => {
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
   const [editModeCadastrais, setEditModeCadastrais] = useState(false);
   const [editableData, setEditableData] = useState({});
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchDesignacoes = async () => {
@@ -34,6 +35,27 @@ const DesignacaoList = () => {
 
   const handleStatusChange = (value) => {
     setEditableData({ ...editableData, status: value });
+  };
+
+  const handleEditTecnicos = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleSaveTecnicos = async () => {
+    try {
+      await axios.put(`http://localhost:8080/api/designacoes/${editableData.id}/dados-tecnicos`, editableData);
+      const updatedDesignacoes = designacoes.map((d) =>
+        d.id === editableData.id ? { ...d, ...editableData } : d
+      );
+      setDesignacoes(updatedDesignacoes);
+      setIsModalVisible(false);
+    } catch (err) {
+      console.error('Erro ao atualizar dados técnicos:', err);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditableData({ ...editableData, [field]: value });
   };
 
   const handleSaveCadastrais = async () => {
@@ -82,6 +104,7 @@ const DesignacaoList = () => {
   ];
 
   return (
+    <>
     <Table
       columns={columns}
       dataSource={designacoes}
@@ -124,16 +147,17 @@ const DesignacaoList = () => {
               <p><strong>CVLAN:</strong> {record.cvlan}</p>
               <p><strong>SVLAN:</strong> {record.svlan}</p>
               <p><strong>IP WAN:</strong> {record.ipWan}</p>
+              <Button onClick={handleEditTecnicos} icon={<EditOutlined />}>Editar</Button>
             </Panel>
             <Panel header="Datas" key="3">
               <p><strong>Data de Criação:</strong> {record.dataCriacao}</p>
               <p><strong>Última Modificação:</strong> {record.dataUltimaModificacao}</p>
               <p><strong>Data de envio da RB:</strong> {record.dataEnvioRb}</p>
-              <p><strong>Agendamento:</strong> {record.dataAgendamento}</p>
+              <p><strong>Agendamento:</strong> {record.dataAgendamento}</p>         
               <p><strong>Agendado:</strong> {record.dataAgendado}</p>
               <p><strong>Instalação:</strong> {record.dataInstalacao}</p>
               <p><strong>Homologação:</strong> {record.dataHomologacao}</p>
-              <p><strong>Entrega Oi:</strong> {record.dataEntregaOi}</p>
+              <p><strong>Entrega Oi:</strong> {record.dataEntregaOi}</p>            
             </Panel>
           </Collapse>
         ),
@@ -147,6 +171,36 @@ const DesignacaoList = () => {
           />
       }}
     />
+
+<Modal
+        title="Editar Dados Técnicos"
+        visible={isModalVisible}
+        onOk={handleSaveTecnicos}
+        onCancel={() => setIsModalVisible(false)}
+      >
+        <Input
+          placeholder="IP PUBLICO"
+          value={editableData.circuitIp}
+          onChange={(e) => handleInputChange('circuitIp', e.target.value)}
+        />
+        <Input
+          placeholder="CVLAN"
+          value={editableData.cvlan}
+          onChange={(e) => handleInputChange('cvlan', e.target.value)}
+        />
+        <Input
+          placeholder="SVLAN"
+          value={editableData.svlan}
+          onChange={(e) => handleInputChange('svlan', e.target.value)}
+        />
+        <Input
+          placeholder="IP WAN"
+          value={editableData.ipWan}
+          onChange={(e) => handleInputChange('ipWan', e.target.value)}
+        />
+      </Modal>
+
+</>
   );
 };
 

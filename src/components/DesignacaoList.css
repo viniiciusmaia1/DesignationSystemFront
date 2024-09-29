@@ -65,3 +65,25 @@
     box-shadow: inset 0px -1px #ddd, inset -1px -1px #ddd, inset -1px 1px #ddd, inset 1px 1px #ddd;
   }
 }
+
+.cadastrais-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.cadastrais-content p {
+  margin-bottom: 8px;
+}
+
+.ant-btn {
+  border-radius: 4px;
+}
+
+.date-columns {
+  display: flex;
+  justify-content: space-between;
+}
+
+.column {
+  flex-basis: 48%;
+}
