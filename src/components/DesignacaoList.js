@@ -9,7 +9,9 @@ import {
   message,
   Modal,
   Input,
+  DatePicker,
 } from "antd";
+
 import {
   PlusOutlined,
   MinusOutlined,
@@ -17,9 +19,12 @@ import {
   SaveOutlined,
 } from "@ant-design/icons";
 
+import moment from 'moment';
+
 const { Panel } = Collapse;
 const { Text } = Typography;
 const { Option } = Select;
+
 
 const DesignacaoList = () => {
   const [designacoes, setDesignacoes] = useState([]);
@@ -27,6 +32,8 @@ const DesignacaoList = () => {
   const [editModeCadastrais, setEditModeCadastrais] = useState(false);
   const [editableData, setEditableData] = useState({});
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [clientes, setClientes] = useState([]);
+  const [statusOptions, setStatusOptions] = useState([]);
 
   useEffect(() => {
     const fetchDesignacoes = async () => {
@@ -97,6 +104,23 @@ const DesignacaoList = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [designacoesResponse, clientesResponse] = await Promise.all([
+          axios.get("http://localhost:8080/api/designacoes"),
+          axios.get("http://localhost:8080/api/clientes"),
+        ]);
+        setDesignacoes(designacoesResponse.data);
+        setClientes(clientesResponse.data);
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+        message.error("Erro ao carregar dados");
+      }
+    };
+    fetchData();
+  }, []);
+
   const handleSaveCliente = async () => {
     if (!editableData.clienteId) {
       message.error("ID do cliente não pode ser vazio");
@@ -105,19 +129,13 @@ const DesignacaoList = () => {
     try {
       const response = await axios.put(
         `http://localhost:8080/api/designacoes/${editableData.id}/cliente`,
-        {
-          clienteId: editableData.clienteId,
-        }
+        { clienteId: editableData.clienteId }
       );
       if (response.data) {
         message.success("Cliente atualizado com sucesso");
         const updatedDesignacoes = designacoes.map((d) =>
           d.id === editableData.id
-            ? {
-                ...d,
-                clienteId: editableData.clienteId,
-                clienteNome: response.data.clienteNome,
-              }
+            ? { ...d, clienteId: editableData.clienteId, clienteNome: response.data.clienteNome }
             : d
         );
         setDesignacoes(updatedDesignacoes);
@@ -131,17 +149,17 @@ const DesignacaoList = () => {
     }
   };
 
-  const [clientes, setClientes] = useState([]);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [designacoesResponse, clientesResponse] = await Promise.all([
+        const [designacoesResponse, clientesResponse, statusResponse] = await Promise.all([
           axios.get("http://localhost:8080/api/designacoes"),
           axios.get("http://localhost:8080/api/clientes"),
+          axios.get("http://localhost:8080/api/status"),
         ]);
         setDesignacoes(designacoesResponse.data);
         setClientes(clientesResponse.data);
+        setStatusOptions(statusResponse.data); 
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
         message.error("Erro ao carregar dados");
@@ -186,7 +204,22 @@ const DesignacaoList = () => {
   return (
     <>
       <Table
-        columns={columns}
+        columns={[
+          { title: "ID", dataIndex: "id", key: "id" },
+          { title: "Designação", dataIndex: "designacao", key: "designacao" },
+          { title: "Cidade", dataIndex: "nomeCidade", key: "cidade" },
+          {
+            title: "Status",
+            dataIndex: "status",
+            key: "status",
+            render: (status) => (
+              <Text type={status === "INSTALADO" ? "success" : "danger"}>
+                {status}
+              </Text>
+            ),
+          },
+          { title: "Cliente", dataIndex: "clienteNome", key: "cliente" },
+        ]}
         dataSource={designacoes}
         rowKey="id"
         expandable={{
@@ -217,23 +250,20 @@ const DesignacaoList = () => {
                   <>
                     <Select
                       defaultValue={record.status}
-                      onChange={handleStatusChange}
+                      onChange={(value) => handleInputChange("status", value)}
                       style={{ width: 180 }}
                     >
-                      <Option value="AGENDADO">AGENDADO</Option>
-                      <Option value="AGENDAMENTO">AGENDAMENTO</Option>
-                      <Option value="CANCELADO">CANCELADO</Option>
-                      <Option value="ENTREGUE_PORTAL_OI">
-                        ENTREGUE PORTAL OI
-                      </Option>
-                      <Option value="ENVIO_RB">ENVIO RB</Option>
-                      <Option value="HOMOLOGADO">HOMOLOGADO</Option>
-                      <Option value="INSTALADO">INSTALADO</Option>
-                      <Option value="NEGOCIAÇÃO">NEGOCIAÇÃO</Option>
-                      <Option value="PENDENCIA_OI">PENDENCIA OI</Option>
-                      <Option value="REAGENDADO">REAGENDADO</Option>
-                      <Option value="VIABILIDADE">VIABILIDADE</Option>
+                      {statusOptions.map((status) => (
+                        <Option key={status} value={status}>
+                          {status}
+                        </Option>
+                      ))}
                     </Select>
+                    <DatePicker
+                      onChange={(date) => handleInputChange("dataAgendado", date)}
+                      disabledDate={(current) => current && current < moment().endOf('day')}
+                      style={{ marginLeft: 8 }}
+                    />
                     <Button onClick={handleSaveCadastrais} icon={<SaveOutlined />}>
                       Salvar
                     </Button>
@@ -275,7 +305,8 @@ const DesignacaoList = () => {
                 )}
 
                 <p>
-                  <strong>DATA AGENDADA:</strong> {record.dataAgendado}
+                  <strong>Agendado para: </strong> 
+                  {record.dataAgendado}
                 </p>
 
                 <p>
