@@ -101,6 +101,11 @@ const DesignacaoList = () => {
         </Text>
       ),
     },
+    {
+      title: 'Cliente',
+      dataIndex: 'cliente',
+      key: 'cliente',
+    },
   ];
 
   return (
@@ -113,12 +118,12 @@ const DesignacaoList = () => {
         expandedRowRender: (record) => (
           <Collapse>
             <Panel header="Dados Cadastrais" key="1">
-              {editModeCadastrais ? (
-                <>
-                  <p><strong>ID:</strong> {record.id}</p>
-                  <p><strong>Designação:</strong> {record.designacao}</p>
-                  <Select defaultValue={record.status} onChange={handleStatusChange} style={{ width: 180 }}>
-                    <Option value="AGENDADO">AGENDADO</Option>
+  {editModeCadastrais ? (
+    <>
+      <p><strong>ID:</strong> {record.id}</p>
+      <p><strong>Designação:</strong> {record.designacao}</p>
+      <Select defaultValue={record.status} onChange={handleStatusChange} style={{ width: 180 }}>
+      <Option value="AGENDADO">AGENDADO</Option>
                     <Option value="AGENDAMENTO">AGENDAMENTO</Option>
                     <Option value="CANCELADO">CANCELADO</Option>
                     <Option value="ENTREGUE_PORTAL_OI">ENTREGUE PORTAL OI</Option>
@@ -129,19 +134,24 @@ const DesignacaoList = () => {
                     <Option value="PENDENCIA_OI">PENDENCIA OI</Option>
                     <Option value="REAGENDADO">REAGENDADO</Option>
                     <Option value="VIABILIDADE">VIABILIDADE</Option>
-                  </Select>
-                  <Button onClick={handleSaveCadastrais} icon={<SaveOutlined />}>Salvar</Button>
-                </>
-              ) : (
-                <>
-                  <p><strong>ID:</strong> {record.id}</p>
-                  <p><strong>Designação:</strong> {record.designacao}</p>
-                  <p><strong>Status:</strong> {record.status}</p>
-                  <Button onClick={() => setEditModeCadastrais(true)} icon={<EditOutlined />}>Editar</Button>
-                </>
-              )}
-              <p><strong>Cidade:</strong> {record.nomeCidade}</p>
-            </Panel>
+      </Select>
+      <Select defaultValue={record.cliente} onChange={(value) => handleInputChange('cliente', value)} style={{ width: 180 }}>
+        <Option value="AMERICANAS">AMERICANAS</Option>
+        <Option value="OUTRO">OUTRO</Option>
+      </Select>
+      <Button onClick={handleSaveCadastrais} icon={<SaveOutlined />}>Salvar</Button>
+    </>
+  ) : (
+    <>
+      <p><strong>ID:</strong> {record.id}</p>
+      <p><strong>Designação:</strong> {record.designacao}</p>
+      <p><strong>Status:</strong> {record.status}</p>
+      <p><strong>Cliente:</strong> {record.cliente}</p>
+      <Button onClick={() => setEditModeCadastrais(true)} icon={<EditOutlined />}>Editar</Button>
+    </>
+  )}
+  <p><strong>Cidade:</strong> {record.nomeCidade}</p>
+</Panel>  
             <Panel header="Dados Técnicos" key="2">
               <p><strong>IP PUBLICO:</strong> {record.circuitIp}</p>
               <p><strong>CVLAN:</strong> {record.cvlan}</p>
