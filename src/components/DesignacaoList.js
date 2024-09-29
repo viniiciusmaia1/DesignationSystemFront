@@ -1,7 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Table, Button, Collapse, Typography, Select, message, Modal, Input } from 'antd';
-import { PlusOutlined, MinusOutlined, EditOutlined, SaveOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import {
+  Table,
+  Button,
+  Collapse,
+  Typography,
+  Select,
+  message,
+  Modal,
+  Input,
+} from "antd";
+import {
+  PlusOutlined,
+  MinusOutlined,
+  EditOutlined,
+  SaveOutlined,
+} from "@ant-design/icons";
 
 const { Panel } = Collapse;
 const { Text } = Typography;
@@ -17,10 +31,12 @@ const DesignacaoList = () => {
   useEffect(() => {
     const fetchDesignacoes = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/designacoes');
+        const response = await axios.get(
+          "http://localhost:8080/api/designacoes"
+        );
         setDesignacoes(response.data);
       } catch (err) {
-        console.error('Erro ao carregar designações:', err);
+        console.error("Erro ao carregar designações:", err);
       }
     };
 
@@ -43,14 +59,17 @@ const DesignacaoList = () => {
 
   const handleSaveTecnicos = async () => {
     try {
-      await axios.put(`http://localhost:8080/api/designacoes/${editableData.id}/dados-tecnicos`, editableData);
+      await axios.put(
+        `http://localhost:8080/api/designacoes/${editableData.id}/dados-tecnicos`,
+        editableData
+      );
       const updatedDesignacoes = designacoes.map((d) =>
         d.id === editableData.id ? { ...d, ...editableData } : d
       );
       setDesignacoes(updatedDesignacoes);
       setIsModalVisible(false);
     } catch (err) {
-      console.error('Erro ao atualizar dados técnicos:', err);
+      console.error("Erro ao atualizar dados técnicos:", err);
     }
   };
 
@@ -60,129 +79,264 @@ const DesignacaoList = () => {
 
   const handleSaveCadastrais = async () => {
     try {
-      await axios.put(`http://localhost:8080/api/designacoes/${editableData.id}/status`, {
-        status: editableData.status,
-      });
-      message.success('Status atualizado com sucesso');
+      await axios.put(
+        `http://localhost:8080/api/designacoes/${editableData.id}/status`,
+        {
+          status: editableData.status,
+        }
+      );
+      message.success("Status atualizado com sucesso");
       const updatedDesignacoes = designacoes.map((d) =>
         d.id === editableData.id ? { ...d, status: editableData.status } : d
       );
       setDesignacoes(updatedDesignacoes);
       setEditModeCadastrais(false);
     } catch (err) {
-      console.error('Erro ao atualizar status:', err);
-      message.error('Erro ao atualizar status');
+      console.error("Erro ao atualizar status:", err);
+      message.error("Erro ao atualizar status");
     }
   };
 
+  const handleSaveCliente = async () => {
+    if (!editableData.clienteId) {
+      message.error("ID do cliente não pode ser vazio");
+      return;
+    }
+    try {
+      const response = await axios.put(
+        `http://localhost:8080/api/designacoes/${editableData.id}/cliente`,
+        {
+          clienteId: editableData.clienteId,
+        }
+      );
+      if (response.data) {
+        message.success("Cliente atualizado com sucesso");
+        const updatedDesignacoes = designacoes.map((d) =>
+          d.id === editableData.id
+            ? {
+                ...d,
+                clienteId: editableData.clienteId,
+                clienteNome: response.data.clienteNome,
+              }
+            : d
+        );
+        setDesignacoes(updatedDesignacoes);
+        setEditModeCadastrais(false);
+      } else {
+        throw new Error("Resposta vazia do servidor");
+      }
+    } catch (err) {
+      console.error("Erro ao atualizar cliente:", err);
+      message.error("Erro ao atualizar cliente: " + err.message);
+    }
+  };
+
+  const [clientes, setClientes] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [designacoesResponse, clientesResponse] = await Promise.all([
+          axios.get("http://localhost:8080/api/designacoes"),
+          axios.get("http://localhost:8080/api/clientes"),
+        ]);
+        setDesignacoes(designacoesResponse.data);
+        setClientes(clientesResponse.data);
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+        message.error("Erro ao carregar dados");
+      }
+    };
+    fetchData();
+  }, []);
+
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
     },
     {
-      title: 'Designação',
-      dataIndex: 'designacao',
-      key: 'designacao',
+      title: "Designação",
+      dataIndex: "designacao",
+      key: "designacao",
     },
     {
-      title: 'Cidade',
-      dataIndex: 'nomeCidade',
-      key: 'cidade',
+      title: "Cidade",
+      dataIndex: "nomeCidade",
+      key: "cidade",
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
       render: (status) => (
-        <Text type={status === 'INSTALADO' ? 'success' : 'danger'}>
+        <Text type={status === "INSTALADO" ? "success" : "danger"}>
           {status}
         </Text>
       ),
     },
     {
-      title: 'Cliente',
-      dataIndex: 'cliente',
-      key: 'cliente',
+      title: "Cliente",
+      dataIndex: "clienteNome",
+      key: "cliente",
     },
   ];
 
   return (
     <>
-    <Table
-      columns={columns}
-      dataSource={designacoes}
-      rowKey="id"
-      expandable={{
-        expandedRowRender: (record) => (
-          <Collapse>
-            <Panel header="Dados Cadastrais" key="1">
-  {editModeCadastrais ? (
-    <>
-      <p><strong>ID:</strong> {record.id}</p>
-      <p><strong>Designação:</strong> {record.designacao}</p>
-      <Select defaultValue={record.status} onChange={handleStatusChange} style={{ width: 180 }}>
-      <Option value="AGENDADO">AGENDADO</Option>
-                    <Option value="AGENDAMENTO">AGENDAMENTO</Option>
-                    <Option value="CANCELADO">CANCELADO</Option>
-                    <Option value="ENTREGUE_PORTAL_OI">ENTREGUE PORTAL OI</Option>
-                    <Option value="ENVIO_RB">ENVIO RB</Option>
-                    <Option value="HOMOLOGADO">HOMOLOGADO</Option>
-                    <Option value="INSTALADO">INSTALADO</Option>
-                    <Option value="NEGOCIAÇÃO">NEGOCIAÇÃO</Option>
-                    <Option value="PENDENCIA_OI">PENDENCIA OI</Option>
-                    <Option value="REAGENDADO">REAGENDADO</Option>
-                    <Option value="VIABILIDADE">VIABILIDADE</Option>
-      </Select>
-      <Select defaultValue={record.cliente} onChange={(value) => handleInputChange('cliente', value)} style={{ width: 180 }}>
-        <Option value="AMERICANAS">AMERICANAS</Option>
-        <Option value="OUTRO">OUTRO</Option>
-      </Select>
-      <Button onClick={handleSaveCadastrais} icon={<SaveOutlined />}>Salvar</Button>
-    </>
-  ) : (
-    <>
-      <p><strong>ID:</strong> {record.id}</p>
-      <p><strong>Designação:</strong> {record.designacao}</p>
-      <p><strong>Status:</strong> {record.status}</p>
-      <p><strong>Cliente:</strong> {record.cliente}</p>
-      <Button onClick={() => setEditModeCadastrais(true)} icon={<EditOutlined />}>Editar</Button>
-    </>
-  )}
-  <p><strong>Cidade:</strong> {record.nomeCidade}</p>
-</Panel>  
-            <Panel header="Dados Técnicos" key="2">
-              <p><strong>IP PUBLICO:</strong> {record.circuitIp}</p>
-              <p><strong>CVLAN:</strong> {record.cvlan}</p>
-              <p><strong>SVLAN:</strong> {record.svlan}</p>
-              <p><strong>IP WAN:</strong> {record.ipWan}</p>
-              <Button onClick={handleEditTecnicos} icon={<EditOutlined />}>Editar</Button>
-            </Panel>
-            <Panel header="Datas" key="3">
-              <p><strong>Data de Criação:</strong> {record.dataCriacao}</p>
-              <p><strong>Última Modificação:</strong> {record.dataUltimaModificacao}</p>
-              <p><strong>Data de envio da RB:</strong> {record.dataEnvioRb}</p>
-              <p><strong>Agendamento:</strong> {record.dataAgendamento}</p>         
-              <p><strong>Agendado:</strong> {record.dataAgendado}</p>
-              <p><strong>Instalação:</strong> {record.dataInstalacao}</p>
-              <p><strong>Homologação:</strong> {record.dataHomologacao}</p>
-              <p><strong>Entrega Oi:</strong> {record.dataEntregaOi}</p>            
-            </Panel>
-          </Collapse>
-        ),
-        onExpand: handleExpand,
-        expandedRowKeys,
-        expandIcon: ({ expanded, onExpand, record }) =>
-          <Button
-            icon={expanded ? <MinusOutlined /> : <PlusOutlined />}
-            shape="circle"
-            onClick={(e) => onExpand(record, e)}
-          />
-      }}
-    />
+      <Table
+        columns={columns}
+        dataSource={designacoes}
+        rowKey="id"
+        expandable={{
+          expandedRowRender: (record) => (
+            <Collapse>
+              <Panel header="Dados Cadastrais" key="1">
+                <p>
+                  <strong>ID:</strong> {record.id}
+                </p>
+                <p>
+                  <strong>Designação:</strong> {record.designacao}
+                </p>
 
-<Modal
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <p>
+                    <strong>Status:</strong> {record.status}
+                  </p>
+                  <Button
+                    onClick={() => setEditModeCadastrais("status")}
+                    icon={<EditOutlined />}
+                    style={{ marginLeft: 8 }}
+                  >
+                    Editar
+                  </Button>
+                </div>
+
+                {editModeCadastrais === "status" && (
+                  <>
+                    <Select
+                      defaultValue={record.status}
+                      onChange={handleStatusChange}
+                      style={{ width: 180 }}
+                    >
+                      <Option value="AGENDADO">AGENDADO</Option>
+                      <Option value="AGENDAMENTO">AGENDAMENTO</Option>
+                      <Option value="CANCELADO">CANCELADO</Option>
+                      <Option value="ENTREGUE_PORTAL_OI">
+                        ENTREGUE PORTAL OI
+                      </Option>
+                      <Option value="ENVIO_RB">ENVIO RB</Option>
+                      <Option value="HOMOLOGADO">HOMOLOGADO</Option>
+                      <Option value="INSTALADO">INSTALADO</Option>
+                      <Option value="NEGOCIAÇÃO">NEGOCIAÇÃO</Option>
+                      <Option value="PENDENCIA_OI">PENDENCIA OI</Option>
+                      <Option value="REAGENDADO">REAGENDADO</Option>
+                      <Option value="VIABILIDADE">VIABILIDADE</Option>
+                    </Select>
+                    <Button onClick={handleSaveCadastrais} icon={<SaveOutlined />}>
+                      Salvar
+                    </Button>
+                  </>
+                )}
+
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <p>
+                    <strong>Cliente:</strong> {record.clienteNome}
+                  </p>
+                  <Button
+                    onClick={() => setEditModeCadastrais("cliente")}
+                    icon={<EditOutlined />}
+                    style={{ marginLeft: 8 }}
+                  >
+                    Editar
+                  </Button>
+                </div>
+
+                {editModeCadastrais === "cliente" && (
+                  <>
+                    <Select
+                      value={editableData.clienteId}
+                      onChange={(value) =>
+                        handleInputChange("clienteId", value)
+                      }
+                      style={{ width: 200 }}
+                    >
+                      {clientes.map((cliente) => (
+                        <Option key={cliente.id} value={cliente.id}>
+                          {cliente.nome}
+                        </Option>
+                      ))}
+                    </Select>
+                    <Button onClick={handleSaveCliente} icon={<SaveOutlined />}>
+                      Salvar
+                    </Button>
+                  </>
+                )}
+
+                <p>
+                  <strong>Cidade:</strong> {record.nomeCidade}
+                </p>
+              </Panel>
+              <Panel header="Dados Técnicos" key="2">
+                <p>
+                  <strong>IP PUBLICO:</strong> {record.circuitIp}
+                </p>
+                <p>
+                  <strong>CVLAN:</strong> {record.cvlan}
+                </p>
+                <p>
+                  <strong>SVLAN:</strong> {record.svlan}
+                </p>
+                <p>
+                  <strong>IP WAN:</strong> {record.ipWan}
+                </p>
+                <Button onClick={handleEditTecnicos} icon={<EditOutlined />}>
+                  Editar
+                </Button>
+              </Panel>
+              <Panel header="Datas" key="3">
+                <p>
+                  <strong>Data de Criação:</strong> {record.dataCriacao}
+                </p>
+                <p>
+                  <strong>Última Modificação:</strong>{" "}
+                  {record.dataUltimaModificacao}
+                </p>
+                <p>
+                  <strong>Data de envio da RB:</strong> {record.dataEnvioRb}
+                </p>
+                <p>
+                  <strong>Agendamento:</strong> {record.dataAgendamento}
+                </p>
+                <p>
+                  <strong>Agendado:</strong> {record.dataAgendado}
+                </p>
+                <p>
+                  <strong>Instalação:</strong> {record.dataInstalacao}
+                </p>
+                <p>
+                  <strong>Homologação:</strong> {record.dataHomologacao}
+                </p>
+                <p>
+                  <strong>Entrega Oi:</strong> {record.dataEntregaOi}
+                </p>
+              </Panel>
+            </Collapse>
+          ),
+          onExpand: handleExpand,
+          expandedRowKeys,
+          expandIcon: ({ expanded, onExpand, record }) => (
+            <Button
+              icon={expanded ? <MinusOutlined /> : <PlusOutlined />}
+              shape="circle"
+              onClick={(e) => onExpand(record, e)}
+            />
+          ),
+        }}
+      />
+
+      <Modal
         title="Editar Dados Técnicos"
         visible={isModalVisible}
         onOk={handleSaveTecnicos}
@@ -191,26 +345,25 @@ const DesignacaoList = () => {
         <Input
           placeholder="IP PUBLICO"
           value={editableData.circuitIp}
-          onChange={(e) => handleInputChange('circuitIp', e.target.value)}
+          onChange={(e) => handleInputChange("circuitIp", e.target.value)}
         />
         <Input
           placeholder="CVLAN"
           value={editableData.cvlan}
-          onChange={(e) => handleInputChange('cvlan', e.target.value)}
+          onChange={(e) => handleInputChange("cvlan", e.target.value)}
         />
         <Input
           placeholder="SVLAN"
           value={editableData.svlan}
-          onChange={(e) => handleInputChange('svlan', e.target.value)}
+          onChange={(e) => handleInputChange("svlan", e.target.value)}
         />
         <Input
           placeholder="IP WAN"
           value={editableData.ipWan}
-          onChange={(e) => handleInputChange('ipWan', e.target.value)}
+          onChange={(e) => handleInputChange("ipWan", e.target.value)}
         />
       </Modal>
-
-</>
+    </>
   );
 };
 
