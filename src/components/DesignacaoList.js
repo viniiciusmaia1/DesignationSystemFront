@@ -260,7 +260,7 @@ const DesignacaoList = () => {
                       onChange={(value) =>
                         handleInputChange("clienteId", value)
                       }
-                      style={{ width: 200 }}
+                      style={{ width: 510 }}
                     >
                       {clientes.map((cliente) => (
                         <Option key={cliente.id} value={cliente.id}>
@@ -273,6 +273,10 @@ const DesignacaoList = () => {
                     </Button>
                   </>
                 )}
+
+                <p>
+                  <strong>DATA AGENDADA:</strong> {record.dataAgendado}
+                </p>
 
                 <p>
                   <strong>Cidade:</strong> {record.nomeCidade}
@@ -307,11 +311,9 @@ const DesignacaoList = () => {
                   <strong>Data de envio da RB:</strong> {record.dataEnvioRb}
                 </p>
                 <p>
-                  <strong>Agendamento:</strong> {record.dataAgendamento}
+                  <strong>Data que ocorreu o agendamento:</strong> {record.dataAgendamento}
                 </p>
-                <p>
-                  <strong>Agendado:</strong> {record.dataAgendado}
-                </p>
+              
                 <p>
                   <strong>Instalação:</strong> {record.dataInstalacao}
                 </p>
