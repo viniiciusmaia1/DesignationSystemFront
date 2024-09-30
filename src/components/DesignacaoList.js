@@ -25,7 +25,6 @@ const { Panel } = Collapse;
 const { Text } = Typography;
 const { Option } = Select;
 
-
 const DesignacaoList = () => {
   const [designacoes, setDesignacoes] = useState([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
@@ -104,6 +103,25 @@ const DesignacaoList = () => {
     }
   };
 
+  const handleSaveDataAgendamento = async () => {
+    try {
+      const formattedDate = editableData.dataAgendado.format("YYYY-MM-DD");
+      await axios.put(
+        `http://localhost:8080/api/${editableData.id}/agendamento`,
+        { dataAgendado: formattedDate }
+      );
+      message.success("Data agendada salva");
+      const updatedDesignacoes = designacoes.map((d) =>
+        d.id === editableData.id ? { ...d, dataAgendado: formattedDate } : d
+      );
+      setDesignacoes(updatedDesignacoes);
+      setEditModeCadastrais(false);
+    } catch (err) {
+      console.error("Erro ao salvar data agendada:", err);
+      message.error("Erro ao salvar data agendada");
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -135,7 +153,11 @@ const DesignacaoList = () => {
         message.success("Cliente atualizado com sucesso");
         const updatedDesignacoes = designacoes.map((d) =>
           d.id === editableData.id
-            ? { ...d, clienteId: editableData.clienteId, clienteNome: response.data.clienteNome }
+            ? {
+                ...d,
+                clienteId: editableData.clienteId,
+                clienteNome: response.data.clienteNome,
+              }
             : d
         );
         setDesignacoes(updatedDesignacoes);
@@ -152,14 +174,15 @@ const DesignacaoList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [designacoesResponse, clientesResponse, statusResponse] = await Promise.all([
-          axios.get("http://localhost:8080/api/designacoes"),
-          axios.get("http://localhost:8080/api/clientes"),
-          axios.get("http://localhost:8080/api/status"),
-        ]);
+        const [designacoesResponse, clientesResponse, statusResponse] =
+          await Promise.all([
+            axios.get("http://localhost:8080/api/designacoes"),
+            axios.get("http://localhost:8080/api/clientes"),
+            axios.get("http://localhost:8080/api/status"),
+          ]);
         setDesignacoes(designacoesResponse.data);
         setClientes(clientesResponse.data);
-        setStatusOptions(statusResponse.data); 
+        setStatusOptions(statusResponse.data);
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
         message.error("Erro ao carregar dados");
@@ -185,6 +208,11 @@ const DesignacaoList = () => {
       key: "cidade",
     },
     {
+      title: "Parceiro",
+      dataIndex: "parceiroNome",
+      key: "parceiro",
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -208,6 +236,8 @@ const DesignacaoList = () => {
           { title: "ID", dataIndex: "id", key: "id" },
           { title: "Designação", dataIndex: "designacao", key: "designacao" },
           { title: "Cidade", dataIndex: "nomeCidade", key: "cidade" },
+          { title: "Cliente", dataIndex: "clienteNome", key: "cliente" },
+          { title: "Parceiro", dataIndex: "parceiroNome", key: "parceiro" },
           {
             title: "Status",
             dataIndex: "status",
@@ -218,7 +248,6 @@ const DesignacaoList = () => {
               </Text>
             ),
           },
-          { title: "Cliente", dataIndex: "clienteNome", key: "cliente" },
         ]}
         dataSource={designacoes}
         rowKey="id"
@@ -233,18 +262,13 @@ const DesignacaoList = () => {
                   <strong>Designação:</strong> {record.designacao}
                 </p>
 
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <p>
-                    <strong>Status:</strong> {record.status}
-                  </p>
-                  <Button
-                    onClick={() => setEditModeCadastrais("status")}
-                    icon={<EditOutlined />}
-                    style={{ marginLeft: 8 }}
-                  >
-                    Editar
-                  </Button>
-                </div>
+                <p>
+                  <strong>Cidade:</strong> {record.nomeCidade}
+                </p>
+
+                <p>
+                  <strong> Parceiro: </strong> {record.parceiroNome}
+                </p>
 
                 {editModeCadastrais === "status" && (
                   <>
@@ -259,14 +283,6 @@ const DesignacaoList = () => {
                         </Option>
                       ))}
                     </Select>
-                    <DatePicker
-                      onChange={(date) => handleInputChange("dataAgendado", date)}
-                      disabledDate={(current) => current && current < moment().endOf('day')}
-                      style={{ marginLeft: 8 }}
-                    />
-                    <Button onClick={handleSaveCadastrais} icon={<SaveOutlined />}>
-                      Salvar
-                    </Button>
                   </>
                 )}
 
@@ -304,13 +320,37 @@ const DesignacaoList = () => {
                   </>
                 )}
 
-                <p>
-                  <strong>Agendado para: </strong> 
-                  {record.dataAgendado}
-                </p>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <p>
+                    <strong>Status:</strong> {record.status}
+                  </p>
+                  <Button
+                    onClick={() => setEditModeCadastrais("status")}
+                    icon={<EditOutlined />}
+                    style={{ marginLeft: 8 }}
+                  >
+                    Editar
+                  </Button>
+                </div>
 
                 <p>
-                  <strong>Cidade:</strong> {record.nomeCidade}
+                  <strong>Agendado para: </strong>
+                  {record.dataAgendado}
+                  <DatePicker
+                    onChange={(date) =>
+                      handleSaveDataAgendamento("dataAgendado", date)
+                    }
+                    disabledDate={(current) =>
+                      current && current < moment().endOf("day")
+                    }
+                    style={{ marginLeft: 8 }}
+                  />
+                  <Button
+                    onClick={handleSaveDataAgendamento}
+                    icon={<SaveOutlined />}
+                  >
+                    Salvar
+                  </Button>
                 </p>
               </Panel>
               <Panel header="Dados Técnicos" key="2">
@@ -342,9 +382,10 @@ const DesignacaoList = () => {
                   <strong>Data de envio da RB:</strong> {record.dataEnvioRb}
                 </p>
                 <p>
-                  <strong>Data que ocorreu o agendamento:</strong> {record.dataAgendamento}
+                  <strong>Data que ocorreu o agendamento:</strong>{" "}
+                  {record.dataAgendamento}
                 </p>
-              
+
                 <p>
                   <strong>Instalação:</strong> {record.dataInstalacao}
                 </p>
@@ -401,3 +442,4 @@ const DesignacaoList = () => {
 };
 
 export default DesignacaoList;
+
