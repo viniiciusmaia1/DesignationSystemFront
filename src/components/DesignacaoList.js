@@ -104,9 +104,9 @@ const DesignacaoList = () => {
 
   const handleSaveDataAgendamento = async () => {
     try {
-      const formattedDate = editableData.dataAgendado.format("YYYY-MM-DD");
+      const formattedDate = moment(editableData.dataAgendado).format("YYYY-MM-DDTHH:mm:ss");
       await axios.put(
-        `http://localhost:8080/api/${editableData.id}/agendamento`,
+        `http://localhost:8080/api/agendamento/${editableData.id}`,
         { dataAgendado: formattedDate }
       );
       message.success("Data agendada salva");
@@ -235,7 +235,7 @@ const DesignacaoList = () => {
       message.error("Erro ao atualizar parceiro: " + err.message);
     }
   };
-  
+
   const columns = [
     {
       title: "ID",
@@ -421,14 +421,11 @@ const DesignacaoList = () => {
                   <strong>Agendado para: </strong>
                   {record.dataAgendado}
                   <DatePicker
-                    onChange={(date) =>
-                      handleSaveDataAgendamento("dataAgendado", date)
-                    }
-                    disabledDate={(current) =>
-                      current && current < moment().endOf("day")
-                    }
-                    style={{ marginLeft: 8 }}
-                  />
+  value={editableData.dataAgendado ? moment(editableData.dataAgendado) : null}
+  onChange={(date) => handleInputChange("dataAgendado", date ? date.format("YYYY-MM-DD") : null)}
+  disabledDate={(current) => current && current < moment().endOf('day')}
+  style={{ marginLeft: 8 }}
+/>
                   <Button
                     onClick={handleSaveDataAgendamento}
                     icon={<SaveOutlined />}
