@@ -104,7 +104,9 @@ const DesignacaoList = () => {
 
   const handleSaveDataAgendamento = async () => {
     try {
-      const formattedDate = moment(editableData.dataAgendado).format("YYYY-MM-DDTHH:mm:ss");
+      const formattedDate = moment(editableData.dataAgendado).format(
+        "YYYY-MM-DDTHH:mm:ss"
+      );
       await axios.put(
         `http://localhost:8080/api/agendamento/${editableData.id}`,
         { dataAgendado: formattedDate }
@@ -223,7 +225,13 @@ const DesignacaoList = () => {
       if (response.data) {
         message.success("Parceiro atualizado com sucesso");
         const updatedDesignacoes = designacoes.map((d) =>
-          d.id === editableData.id ? { ...d, parceiroId: editableData.parceiroId, parceiroNome: response.data.parceiroNome } : d
+          d.id === editableData.id
+            ? {
+                ...d,
+                parceiroId: editableData.parceiroId,
+                parceiroNome: response.data.parceiroNome,
+              }
+            : d
         );
         setDesignacoes(updatedDesignacoes);
         setEditModeCadastrais(false);
@@ -421,11 +429,22 @@ const DesignacaoList = () => {
                   <strong>Agendado para: </strong>
                   {record.dataAgendado}
                   <DatePicker
-  value={editableData.dataAgendado ? moment(editableData.dataAgendado) : null}
-  onChange={(date) => handleInputChange("dataAgendado", date ? date.format("YYYY-MM-DD") : null)}
-  disabledDate={(current) => current && current < moment().endOf('day')}
-  style={{ marginLeft: 8 }}
-/>
+                    value={
+                      editableData.dataAgendado
+                        ? moment(editableData.dataAgendado)
+                        : null
+                    }
+                    onChange={(date) =>
+                      handleInputChange(
+                        "dataAgendado",
+                        date ? date.format("YYYY-MM-DD") : null
+                      )
+                    }
+                    disabledDate={(current) =>
+                      current && current < moment().endOf("day")
+                    }
+                    style={{ marginLeft: 8 }}
+                  />
                   <Button
                     onClick={handleSaveDataAgendamento}
                     icon={<SaveOutlined />}
