@@ -33,6 +33,7 @@ const DesignacaoList = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
+  const [parceiros, setParceiros] = useState([]);
 
   useEffect(() => {
     const fetchDesignacoes = async () => {
@@ -191,6 +192,51 @@ const DesignacaoList = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [designacoesResponse, clientesResponse, parceirosResponse] = await Promise.all([
+          axios.get("http://localhost:8080/api/designacoes"),
+          axios.get("http://localhost:8080/api/clientes"),
+          axios.get("http://localhost:8080/api/parceiros"),
+        ]);
+        setDesignacoes(designacoesResponse.data);
+        setClientes(clientesResponse.data);
+        setParceiros(parceirosResponse.data);
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+        message.error("Erro ao carregar dados");
+      }
+    };
+    fetchData();
+  }, []);
+  
+  const handleSaveParceiro = async () => {
+    if (!editableData.parceiroId) {
+      message.error("ID do parceiro não pode ser vazio");
+      return;
+    }
+    try {
+      const response = await axios.put(
+        `http://localhost:8080/api/designacoes/${editableData.id}/parceiro`,
+        { parceiroId: editableData.parceiroId }
+      );
+      if (response.data) {
+        message.success("Parceiro atualizado com sucesso");
+        const updatedDesignacoes = designacoes.map((d) =>
+          d.id === editableData.id ? { ...d, parceiroId: editableData.parceiroId, parceiroNome: response.data.parceiroNome } : d
+        );
+        setDesignacoes(updatedDesignacoes);
+        setEditModeCadastrais(false);
+      } else {
+        throw new Error("Resposta vazia do servidor");
+      }
+    } catch (err) {
+      console.error("Erro ao atualizar parceiro:", err);
+      message.error("Erro ao atualizar parceiro: " + err.message);
+    }
+  };
+
   const columns = [
     {
       title: "ID",
@@ -266,9 +312,37 @@ const DesignacaoList = () => {
                   <strong>Cidade:</strong> {record.nomeCidade}
                 </p>
 
-                <p>
-                  <strong> Parceiro: </strong> {record.parceiroNome}
-                </p>
+                <div style={{ display: "flex", alignItems: "center" }}>
+  <p>
+    <strong>Parceiro:</strong> {record.parceiroNome}
+  </p>
+  <Button
+    onClick={() => setEditModeCadastrais("parceiro")}
+    icon={<EditOutlined />}
+    style={{ marginLeft: 8 }}
+  >
+    Editar
+  </Button>
+</div>
+
+{editModeCadastrais === "parceiro" && (
+  <>
+    <Select
+      value={editableData.parceiroId}
+      onChange={(value) => handleInputChange("parceiroId", value)}
+      style={{ width: 510 }}
+    >
+      {parceiros.map((parceiro) => (
+        <Option key={parceiro.id} value={parceiro.id}>
+          {parceiro.nome}
+        </Option>
+      ))}
+    </Select>
+    <Button onClick={handleSaveParceiro} icon={<SaveOutlined />}>
+      Salvar
+    </Button>
+  </>
+)}
 
                 {editModeCadastrais === "status" && (
                   <>
@@ -320,18 +394,36 @@ const DesignacaoList = () => {
                   </>
                 )}
 
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <p>
-                    <strong>Status:</strong> {record.status}
-                  </p>
-                  <Button
-                    onClick={() => setEditModeCadastrais("status")}
-                    icon={<EditOutlined />}
-                    style={{ marginLeft: 8 }}
-                  >
-                    Editar
-                  </Button>
-                </div>
+<div style={{ display: "flex", alignItems: "center" }}>
+  <p>
+    <strong>Status:</strong> {record.status}
+  </p>
+  <Button
+    onClick={() => setEditModeCadastrais("status")}
+    icon={<EditOutlined />}
+    style={{ marginLeft: 8 }}
+  >
+    Editar
+  </Button>
+  {editModeCadastrais === "status" && (
+    <>
+      <Select
+        value={editableData.status}
+        onChange={handleStatusChange}
+        style={{ width: 180, marginLeft: 8 }}
+      >
+        {statusOptions.map((status) => (
+          <Option key={status} value={status}>
+            {status}
+          </Option>
+        ))}
+      </Select>
+      <Button onClick={handleSaveCadastrais} icon={<SaveOutlined />} style={{ marginLeft: 8 }}>
+        Salvar
+      </Button>
+    </>
+  )}
+</div>
 
                 <p>
                   <strong>Agendado para: </strong>
